@@ -35,7 +35,7 @@ class _BaseScreenState extends State<BaseScreen> {
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.white,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: Color.fromRGBO(65, 83, 193, 1),
+          selectedItemColor: Color.fromRGBO(5, 50, 107, 1),
           unselectedItemColor: Colors.grey,
           items: [
             BottomNavigationBarItem(
