@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'Management App',
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        fontFamily: "Poppins",
+        fontFamily: "Montserrat",
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
           elevation: 0,
