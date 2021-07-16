@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:management_app/data/user.dart';
-import 'dart:convert';
+import 'package:management_app/data/slide.dart';
+import 'package:management_app/widget/dots.dart';
 
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:loading_animations/loading_animations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_image/flutter_image.dart';
 
 const Color LightBlue = Color.fromRGBO(8, 49, 91, 1);
 const Color DarkBlue = Color.fromRGBO(6, 52, 110, 1);
@@ -15,12 +19,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _currentPage = 0;
+  final PageController _pageController = PageController(initialPage: 0);
+
   User? data;
+
+  void setStateIfMounted(f) {
+    if (mounted) setState(f);
+  }
 
   Future<String> getJson() async {
     var _jsonData = await http.get(
       Uri.parse(
-        'http://www.json-generator.com/api/json/get/ceBDtBbvDm?indent=2',
+        'http://www.json-generator.com/api/json/get/cevQSBOYoi?indent=2',
       ),
     );
     return _jsonData.body;
@@ -30,8 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
     String _jsonData = await getJson();
     Map<String, dynamic> _data = json.decode(_jsonData);
     User user = User.fromJson(_data);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => data = user);
+    await Future.delayed(const Duration(milliseconds: 150));
+    setStateIfMounted(() => data = user);
     print('done fetching');
   }
 
@@ -42,11 +53,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: data == null
           ? _loadScreen()
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 //Build user info
                 Stack(
@@ -60,7 +77,90 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [buildUserInfo(), buildAvatar(), userStat()],
                       ),
                     ),
+                    Positioned(
+                      top: 80,
+                      right: 15,
+                      child: IconButton(
+                        icon: Icon(
+                          FontAwesomeIcons.cog,
+                          color: Colors.white,
+                          size: 25,
+                        ),
+                        onPressed: () => print('Pressed Setting'),
+                      ),
+                    )
                   ],
+                ),
+                //ScrollView
+                Expanded(
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: ListView(
+                      children: [
+                        //Title "Ưa thích" section
+                        Container(
+                          padding: EdgeInsets.only(left: 20, top: 10),
+                          child: Text(
+                            "Ưa thích",
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        //List view "Ưa thích" section
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          height: 200,
+                          child: PageView(
+                            controller: _pageController,
+                            onPageChanged: (index) =>
+                                setState(() => _currentPage = index),
+                            children: slideList,
+                          ),
+                        ),
+
+                        Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              for (int i = 0; i < slideList.length; i++)
+                                i == _currentPage
+                                    ? SlideDots(true)
+                                    : SlideDots(false)
+                            ],
+                          ),
+                        ),
+
+                        //Recent activities sections
+                        Container(
+                          padding: EdgeInsets.only(left: 20, top: 10),
+                          child: Text(
+                            "Hoạt động gần đây",
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        ListView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: data!.activities.length,
+                          itemBuilder: (context, index) {
+                            return buildActivity(index);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               ],
             ),
@@ -114,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CircleAvatar(
           radius: 57,
           backgroundColor: Colors.white,
-          backgroundImage: NetworkImage(data!.picture),
+          backgroundImage: NetworkImageWithRetry(data!.picture),
         ),
       ),
     );
@@ -226,6 +326,65 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: DarkBlue,
           borderColor: DarkBlue,
           duration: const Duration(seconds: 2),
+        ),
+      ),
+    );
+  }
+
+  Container buildActivity(int index) {
+    return Container(
+      padding: EdgeInsets.all(3),
+      child: Center(
+        child: Container(
+          width: 360,
+          height: 75,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Colors.grey[100],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child:
+                    Icon(FontAwesomeIcons.bullhorn, color: DarkBlue, size: 30),
+              ),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Tên: ${data!.activities[index].type}',
+                      textAlign: TextAlign.left,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: DarkBlue,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Hình thức: ${data!.activities[index].description}',
+                      textAlign: TextAlign.left,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  '${data!.activities[index].date}/${data!.activities[index].month}/${data!.activities[index].year}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
