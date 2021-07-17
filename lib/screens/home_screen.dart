@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<String> getJson() async {
     var _jsonData = await http.get(
       Uri.parse(
-        'http://www.json-generator.com/api/json/get/cevQSBOYoi?indent=2',
+        'http://www.json-generator.com/api/json/get/ceTFIrMQte?indent=2',
       ),
     );
     return _jsonData.body;
@@ -54,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -62,107 +63,99 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: data == null
           ? _loadScreen()
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                //Build user info
-                Stack(
-                  children: <Widget>[
-                    //Build Info Background
-                    buildBackGround(),
-                    //Build Info Card
-                    Center(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [buildUserInfo(), buildAvatar(), userStat()],
+          : SingleChildScrollView(
+              physics: ScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  //Build user info
+                  Stack(
+                    children: <Widget>[
+                      //Build Info Background
+                      buildBackGround(),
+                      //Build Info Card
+                      Center(
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            buildUserInfo(),
+                            buildAvatar(),
+                            userStat()
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        top: 80,
+                        right: 15,
+                        child: IconButton(
+                          icon: Icon(
+                            FontAwesomeIcons.cog,
+                            color: Colors.white,
+                            size: 25,
+                          ),
+                          onPressed: () => print('Pressed Setting'),
+                        ),
+                      )
+                    ],
+                  ),
+
+                  //Title "Ưa thích" section
+                  Container(
+                    padding: EdgeInsets.only(left: 20, top: 10),
+                    child: Text(
+                      "Ưa thích",
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Positioned(
-                      top: 80,
-                      right: 15,
-                      child: IconButton(
-                        icon: Icon(
-                          FontAwesomeIcons.cog,
-                          color: Colors.white,
-                          size: 25,
-                        ),
-                        onPressed: () => print('Pressed Setting'),
-                      ),
-                    )
-                  ],
-                ),
-                //ScrollView
-                Expanded(
-                  child: MediaQuery.removePadding(
-                    context: context,
-                    removeTop: true,
-                    child: ListView(
-                      children: [
-                        //Title "Ưa thích" section
-                        Container(
-                          padding: EdgeInsets.only(left: 20, top: 10),
-                          child: Text(
-                            "Ưa thích",
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                  ),
 
-                        //List view "Ưa thích" section
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          height: 200,
-                          child: PageView(
-                            controller: _pageController,
-                            onPageChanged: (index) =>
-                                setState(() => _currentPage = index),
-                            children: slideList,
-                          ),
-                        ),
+                  //List view "Ưa thích" section
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    height: 200,
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      children: slideList,
+                    ),
+                  ),
 
-                        Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              for (int i = 0; i < slideList.length; i++)
-                                i == _currentPage
-                                    ? SlideDots(true)
-                                    : SlideDots(false)
-                            ],
-                          ),
-                        ),
-
-                        //Recent activities sections
-                        Container(
-                          padding: EdgeInsets.only(left: 20, top: 10),
-                          child: Text(
-                            "Hoạt động gần đây",
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        ListView.builder(
-                          physics: NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: data!.activities.length,
-                          itemBuilder: (context, index) {
-                            return buildActivity(index);
-                          },
-                        ),
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        for (int i = 0; i < slideList.length; i++)
+                          i == _currentPage ? SlideDots(true) : SlideDots(false)
                       ],
                     ),
                   ),
-                )
-              ],
+
+                  //Recent activities sections
+                  Container(
+                    padding: EdgeInsets.only(left: 20, top: 10),
+                    child: Text(
+                      "Hoạt động gần đây",
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: _buildActivitesList(),
+                  )
+                ],
+              ),
             ),
     );
   }
@@ -328,6 +321,17 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(seconds: 2),
         ),
       ),
+    );
+  }
+
+  ListView _buildActivitesList() {
+    return ListView.builder(
+      physics: NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: data!.activities.length,
+      itemBuilder: (context, index) {
+        return buildActivity(index);
+      },
     );
   }
 
